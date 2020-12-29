@@ -7,8 +7,12 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="share_emotion"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/yinleina"
+        android:label="studyapp"
+        android:roundIcon="@mipmap/yinleina_round">
+        <meta-data
+            android:name="io.flutter.app.android.SplashScreenUntilFirstFrame"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
