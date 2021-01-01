@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/screenutil.dart';
+import 'package:share_emotion/paint_view/paint.dart';
+import 'package:share_emotion/play_view/play_video.dart';
+import 'package:share_emotion/shared_view/shared_info.dart';
+
+import 'application.dart';
+import 'mine/mine.dart';
 
 void main() {
+  GlobalKey<NavigatorState> globalKey = new GlobalKey<NavigatorState>();
+  Application.globalKey = globalKey;
   runApp(MyApp());
 }
 
@@ -9,6 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: Application.globalKey,
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.
@@ -50,17 +60,71 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int currentIndex = 0;
+  final List<BottomNavigationBarItem> bottomNavItems = [
+    BottomNavigationBarItem(
+      backgroundColor: Colors.blue,
+      icon: Icon(Icons.home),
+      label: "首页",
+    ),
+    BottomNavigationBarItem(
+        backgroundColor: Colors.blue, icon: Icon(Icons.home), label: "首页"),
+    BottomNavigationBarItem(
+      backgroundColor: Colors.blue,
+      icon: Icon(Icons.home),
+      label: "首页",
+    ),
+  ];
+  List<Widget> list = [PaintGame(), PlayVideo(), SharedInfo()];
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  OverlayEntry overlayEntry;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ///WidgetsBinding.instance.addPostFrameCallback 这个作用是界面绘制完成的监听回调  必须在绘制完成后添加OverlayEntry
+      ///MediaQuery.of(context).size.width  屏幕宽度
+      ///MediaQuery.of(context).size.height 屏幕高度
+      addOverlayEntry(MediaQuery.of(context).size.width - 80,
+          MediaQuery.of(context).size.height - 80);
     });
+  }
+
+  Future addOverlayEntry(double left, double top) async {
+    overlayEntry = OverlayEntry(
+        builder: (BuildContext context) => Positioned(
+              top: top,
+              left: left,
+              child: GestureDetector(
+                  onTap: () async {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => MinePage()));
+                  },
+                  child: Draggable(
+                      onDragEnd: (DraggableDetails details) {
+                        ///拖动结束
+                        addOverlayEntry(details.offset.dx, details.offset.dy);
+                      },
+                      onDragStarted: () {
+                        Application.overlayEntry?.remove();
+                      },
+
+                      ///feedback是拖动时跟随手指滑动的Widget。
+                      feedback: Icon(
+                        Icons.home,
+                        color: Colors.black12,
+                      ),
+
+                      ///child是静止时显示的Widget，
+                      child: Icon(
+                        Icons.home,
+                        color: Colors.red,
+                      ))),
+            ));
+
+    /// 赋值  方便移除
+    Application.overlayEntry = overlayEntry;
+    Application.globalKey.currentState.overlay.insert(overlayEntry);
   }
 
   @override
@@ -71,47 +135,23 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    ScreenUtil.init(context,
+        designSize: Size(750, 1334), allowFontScaling: true);
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+      body: list[currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: bottomNavItems,
+        currentIndex: currentIndex,
+        onTap: (index) {
+          currentIndex = index;
+          setState(() {});
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

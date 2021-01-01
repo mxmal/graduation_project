@@ -6,7 +6,7 @@
     <item>
         <bitmap
             android:gravity="fill"
-            android:src="@drawable/yinleina" />
+            android:src="@drawable/qvyinleina" />
     </item>
 </layer-list>
 
